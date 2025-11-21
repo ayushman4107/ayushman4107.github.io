@@ -1,7 +1,7 @@
 
 This repository contains a single-page website served via GitHub Pages.
 
-Open: https://USERNAME.github.io
+Open: https://ayushman4107.github.io
 
 ## About
 This site is a single `index.html` file that contains HTML, CSS and JavaScript.
