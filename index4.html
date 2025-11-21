@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinetix | Context-to-Video AI</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CSS RESET & BASE --- */
+        :root {
+            --primary-text: #2c2c2c;
+            --secondary-text: #555555;
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.9);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            --accent: #111111;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--primary-text);
+            overflow-x: hidden;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* --- BACKGROUND VIDEO --- */
+        .bg-video-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        video {
+            min-width: 100%; min-height: 100%;
+            width: auto; height: auto;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+            filter: brightness(1.1) contrast(0.95);
+        }
+
+        /* --- NAVIGATION --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 4rem;
+            position: fixed;
+            top: 0; width: 100%;
+            z-index: 100;
+            transition: all 0.4s ease;
+        }
+
+        /* --- LOGO UPDATE --- */
+        .logo {
+            font-family: 'Lora', serif; /* Serif font as requested */
+            font-size: 2.2rem;
+            font-weight: 600; /* Semi-bold looks best for Lora */
+            color: #000000; /* Solid Black */
+            position: relative;
+            cursor: pointer;
+            letter-spacing: -0.02em; /* Slight tightening for elegance */
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #000000; 
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: opacity 0.3s;
+            position: relative;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links a:hover { opacity: 0.6; }
+
+        /* --- MAIN LAYOUT --- */
+        main {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8rem 2rem 4rem;
+        }
+
+        /* --- GLASS CARD COMPONENT --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 900px;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero-text {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 400;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+            color: var(--primary-text);
+        }
+
+        p.subtitle {
+            font-size: 1.1rem;
+            color: var(--secondary-text);
+            font-weight: 300;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* --- INPUT AREA --- */
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 2.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: rgba(255,255,255,0.5);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            color: var(--primary-text);
+            resize: none;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        textarea:focus {
+            background: rgba(255,255,255,0.9);
+            border-color: rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+
+        textarea::placeholder { color: #999; font-weight: 300; }
+
+        /* --- STYLE SELECTOR --- */
+        .style-selector {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .style-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .style-option input { display: none; }
+
+        .style-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1rem;
+            border: 1px solid transparent;
+            background: rgba(255,255,255,0.3);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .style-card span {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            color: var(--secondary-text);
+            margin-top: 0.5rem;
+        }
+
+        .icon {
+            width: 24px; height: 24px;
+            margin-bottom: 8px;
+            border: 1px solid var(--secondary-text);
+            border-radius: 50%;
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+
+        .style-option input:checked + .style-card {
+            background: #fff;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            transform: translateY(-5px);
+        }
+        
+        .style-option input:checked + .style-card span { color: black; }
+        .style-option input:checked + .style-card .icon { border-color: black; opacity: 1; background: black; }
+
+        /* --- GENERATE BUTTON --- */
+        .action-area {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .btn-generate {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-generate:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* --- LOADING & OUTPUT --- */
+        .processing-state {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .status-text {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: var(--secondary-text);
+            margin-top: 1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 2px;
+            background: rgba(0,0,0,0.1);
+            margin: 1rem auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            position: absolute;
+            left: 0; top: 0; height: 100%; width: 0%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .video-result {
+            display: none;
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-top: 1rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            animation: fadeUp 1s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes softPulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="bg-video-container">
+        <video autoplay muted loop playsinline>
+            <source src="https://videos.pexels.com/video-files/855029/855029-hd_1920_1080_30fps.mp4" type="video/mp4">
+            Your browser does not support HTML5 video.
+        </video>
+    </div>
+
+    <nav id="navbar">
+        <div class="logo">Kinetix</div>
+        <div class="nav-links">
+            <a href="#showcase">Showcase</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#about">About Us</a>
+        </div>
+    </nav>
+
+    <main>
+        <div class="glass-panel" id="main-panel">
+            
+            <div class="hero-text">
+                <h1>Visualize the Unspoken.</h1>
+                <p class="subtitle">Simply describe your purpose. We handle the screenplay, direction, and generation.</p>
+            </div>
+
+            <div id="creation-form">
+                <div class="input-wrapper">
+                    <textarea id="user-prompt" placeholder="E.g. I need a 15-second energetic marketing reel for a ceramic coffee cup brand. The vibe should be cozy but modern."></textarea>
+                </div>
+
+                <div class="style-selector">
+                    <label class="style-option">
+                        <input type="radio" name="style" value="illustrative">
+                        <div class="style-card">
+                            <div class="icon"></div>
+                            <span>Illustrative</span>
+                        </div>
+                    </label>
+                    <label class="style-option">
+                        <input type="radio" name="style" value="anime">
+                        <div class="style-card">
+                            <div class="icon"></div>
+                            <span>Anime</span>
+                        </div>
+                    </label>
+                    <label class="style-option">
+                        <input type="radio" name="style" value="vintage">
+                        <div class="style-card">
+                            <div class="icon"></div>
+                            <span>Vintage</span>
+                        </div>
+                    </label>
+                    <label class="style-option">
+                        <input type="radio" name="style" value="realistic" checked>
+                        <div class="style-card">
+                            <div class="icon"></div>
+                            <span>Realistic</span>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="action-area">
+                    <button class="btn-generate" onclick="startGeneration()">Create Video</button>
+                </div>
+            </div>
+
+            <div class="processing-state" id="processing-view">
+                <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;">Orchestrating Scene</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="status-text" id="status-text">Parsing Context...</div>
+            </div>
+
+            <div class="video-result" id="result-view">
+                <video width="100%" height="auto" controls autoplay muted loop style="border-radius: 16px;">
+                    <source src="https://videos.pexels.com/video-files/5532776/5532776-hd_1920_1080_25fps.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <p style="font-size: 0.9rem; color: var(--secondary-text);">Generated Strategy: <strong>Marketing / Realistic</strong></p>
+                    <button class="btn-generate" onclick="resetUI()" style="padding: 0.8rem 1.5rem; font-size: 0.9rem; background: transparent; color: var(--primary-text); border: 1px solid var(--primary-text);">New Context</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // --- ANIMATION & LOGIC ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const panel = document.getElementById('main-panel');
+            panel.style.transition = "opacity 1s ease, transform 1s ease";
+            setTimeout(() => {
+                panel.style.opacity = "1";
+                panel.style.transform = "translateY(0)";
+            }, 300);
+        });
+
+        function startGeneration() {
+            const prompt = document.getElementById('user-prompt').value;
+            if(prompt.trim() === "") {
+                alert("Please provide a context for the video.");
+                return;
+            }
+
+            const form = document.getElementById('creation-form');
+            const processing = document.getElementById('processing-view');
+            
+            form.style.opacity = '0';
+            form.style.transition = 'opacity 0.5s';
+            
+            setTimeout(() => {
+                form.style.display = 'none';
+                processing.style.display = 'block';
+                runSimulationSteps();
+            }, 500);
+        }
+
+        function runSimulationSteps() {
+            const statusEl = document.getElementById('status-text');
+            const barEl = document.getElementById('progress-fill');
+            
+            const steps = [
+                { text: "Analyzing Context & Intent...", time: 800 },
+                { text: "Drafting Screenplay & Dialogue...", time: 2000 },
+                { text: "Generating Visual Prompts...", time: 1500 },
+                { text: "Rendering Realistic Textures...", time: 2000 },
+                { text: "Finalizing Output...", time: 1000 }
+            ];
+
+            let currentStep = 0;
+            let progress = 0;
+
+            function nextStep() {
+                if (currentStep >= steps.length) {
+                    showResult();
+                    return;
+                }
+
+                statusEl.innerText = steps[currentStep].text;
+                statusEl.style.animation = "softPulse 1s infinite";
+                
+                progress += (100 / steps.length);
+                barEl.style.width = `${progress}%`;
+
+                setTimeout(() => {
+                    currentStep++;
+                    nextStep();
+                }, steps[currentStep].time);
+            }
+
+            nextStep();
+        }
+
+        function showResult() {
+            const processing = document.getElementById('processing-view');
+            const result = document.getElementById('result-view');
+
+            processing.style.display = 'none';
+            result.style.display = 'block';
+        }
+
+        function resetUI() {
+            const result = document.getElementById('result-view');
+            const form = document.getElementById('creation-form');
+            const barEl = document.getElementById('progress-fill');
+            
+            result.style.display = 'none';
+            form.style.display = 'block';
+            
+            setTimeout(() => {
+                form.style.opacity = '1';
+            }, 50);
+
+            document.getElementById('user-prompt').value = "";
+            barEl.style.width = "0%";
+        }
+
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.style.background = "rgba(255, 255, 255, 0.8)";
+                nav.style.backdropFilter = "blur(10px)";
+                nav.style.padding = "1.5rem 4rem";
+                nav.style.boxShadow = "0 2px 20px rgba(0,0,0,0.05)";
+            } else {
+                nav.style.background = "transparent";
+                nav.style.backdropFilter = "none";
+                nav.style.padding = "2rem 4rem";
+                nav.style.boxShadow = "none";
+            }
+        });
+
+    </script>
+</body>
+</html>
