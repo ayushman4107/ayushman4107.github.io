@@ -407,6 +407,37 @@
                 alert("Please provide a context for the video.");
                 return;
             }
+            <form id="video-prompt-form">
+            <textarea id="prompt-input" placeholder="Enter your video generation prompt here..."></textarea>
+            <button type="submit">Generate Video</button>
+            </form>
+
+            document.getElementById('video-prompt-form').addEventListener('submit', async function(e) {
+                e.preventDefault(); // Stop default form submission
+
+                const promptText = document.getElementById('prompt-input').value;
+                const n8nWebhookURL = 'https://bengaltiger.app.n8n.cloud/webhook/4f911356-a05a-4139-a8b9-b28abc87317b'; // Paste the URL from Step 1
+
+                const response = await fetch(n8nWebhookURL, {
+                    method: 'POST',
+                    headers: {
+                    // IMPORTANT: Tell n8n the body is JSON
+                    'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({
+            // The key 'video_prompt' is what you will use in n8n to access the data
+                        video_prompt: promptText 
+                    })
+                });
+
+            // You can handle the response here (e.g., show a 'Video is being generated' message)
+                if (response.ok) {
+                    alert('Prompt sent to n8n successfully! Video generation started.');
+                } else {
+                    alert('Error sending prompt.');
+                }
+            });
+            
 
             const form = document.getElementById('creation-form');
             const processing = document.getElementById('processing-view');
@@ -426,11 +457,11 @@
             const barEl = document.getElementById('progress-fill');
             
             const steps = [
-                { text: "Analyzing Context & Intent...", time: 800 },
-                { text: "Drafting Screenplay & Dialogue...", time: 2000 },
-                { text: "Generating Visual Prompts...", time: 1500 },
-                { text: "Rendering Realistic Textures...", time: 2000 },
-                { text: "Finalizing Output...", time: 1000 }
+                { text: "Analyzing Context & Intent...", time: 10000 },
+                { text: "Drafting Screenplay & Dialogue...", time: 40000 },
+                { text: "Generating Visual Prompts...", time: 50000 },
+                { text: "Rendering Realistic Textures...", time: 50000 },
+                { text: "Finalizing Output...", time: 100000 }
             ];
 
             let currentStep = 0;
@@ -498,4 +529,5 @@
 
     </script>
 </body>
+
 </html>
