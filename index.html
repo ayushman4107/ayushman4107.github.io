@@ -495,8 +495,73 @@
                 nav.style.boxShadow = "none";
             }
         });
+    // 1. Get references to the form elements
+        const form = document.getElementById('promptForm');
+        const promptInput = document.getElementById('promptInput');
+        const statusMessage = document.getElementById('statusMessage');
+        const submitButton = document.getElementById('submitButton');
+
+    // 2. Define your n8n Production Webhook URL
+    // *** REPLACE THIS WITH YOUR ACTUAL COPIED URL ***
+        const n8nWebhookURL = 'https://bengaltiger.app.n8n.cloud/webhook/4f911356-a05a-4139-a8b9-b28abc87317b'; 
+
+    // 3. Attach an event listener to the form for submission
+        form.addEventListener('submit', async function(event) {
+        // Prevent the browser from performing a standard form submission (reloading the page)
+        event.preventDefault(); 
+        
+        const userPrompt = promptInput.value.trim();
+
+        if (userPrompt === "") {
+            statusMessage.textContent = 'Please enter a prompt before generating.';
+            statusMessage.style.color = 'orange';
+            return;
+        }
+
+        // --- Start of Request Logic ---
+        statusMessage.textContent = 'Sending prompt to n8n...';
+        statusMessage.style.color = 'blue';
+        submitButton.disabled = true; // Disable button to prevent double-submission
+
+        try {
+            const response = await fetch(n8nWebhookURL, {
+                method: 'POST', // Must match the HTTP Method in your n8n Webhook node
+                
+                headers: {
+                    // Tell the n8n webhook that the data we are sending is JSON
+                    'Content-Type': 'application/json' 
+                },
+                
+                body: JSON.stringify({
+                    // The key 'video_prompt' is the name you will use to access the data in n8n
+                    video_prompt: userPrompt 
+                })
+            });
+
+            if (response.ok) {
+                // HTTP status 200-299 indicates success
+                statusMessage.textContent = 'Prompt successfully submitted! Video generation has started.';
+                statusMessage.style.color = 'green';
+                promptInput.value = ''; // Clear the input field
+            } else {
+                // n8n returned an error status (e.g., 400, 500)
+                statusMessage.textContent = `Error: Failed to submit prompt. Status: ${response.status}`;
+                statusMessage.style.color = 'red';
+            }
+        } catch (error) {
+            // Network error (e.g., n8n URL is wrong, network is down)
+            statusMessage.textContent = `Network error: Could not connect to the webhook. Check your URL.`;
+            statusMessage.style.color = 'red';
+            console.error('Fetch error:', error);
+        } finally {
+            submitButton.disabled = false; // Re-enable the button
+        }
+        // --- End of Request Logic ---
+    });
 
     </script>
+    
 </body>
 </html>
+
 
